@@ -305,6 +305,7 @@ const itemVariants = {
 
 export function StickyNotesDemo() {
   const [notes, setNotes] = useState<Note[]>(initialNotes);
+  const [lastCreatedId, setLastCreatedId] = useState<string | null>(null);
 
   const handleUpdateNote = (updatedNote: Note) => {
     setNotes(notes.map((note) => (note.id === updatedNote.id ? updatedNote : note)));
@@ -344,9 +345,10 @@ export function StickyNotesDemo() {
         name: randomAuthor.name,
         email: `${randomAuthor.name.toLowerCase().replace(/\s+/g, "")}@example.com`,
       },
-      checklistItems: [{ id: `${Date.now() + 1}`, content: "New to-do", checked: false, order: 0 }],
+      checklistItems: [],
     };
     setNotes([newNote, ...notes]);
+    setLastCreatedId(newNote.id);
   };
 
   return (
@@ -383,6 +385,9 @@ export function StickyNotesDemo() {
                     onDelete={handleDeleteNote}
                     onCopy={handleCopyNote}
                     syncDB={false}
+                    autoFocusNewItem={lastCreatedId === note.id}
+                    onAutoFocusComplete={() => setLastCreatedId(null)}
+                    textonStart="New to-do"
                   />
                 </div>
               </motion.div>

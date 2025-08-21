@@ -858,6 +858,8 @@ export default function BoardPage({ params }: { params: Promise<{ id: string }> 
                   onUnarchive={boardId === "archive" ? handleUnarchiveNote : undefined}
                   onCopy={handleCopyNote}
                   showBoardName={boardId === "all-notes" || boardId === "archive"}
+                  autoFocusNewItem={addingChecklistItem === note.id}
+                  onAutoFocusComplete={() => setAddingChecklistItem(null)}
                   className="shadow-md shadow-black/10 p-4"
                   style={{
                     backgroundColor: resolvedTheme === "dark" ? "#18181B" : note.color,

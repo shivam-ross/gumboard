@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -68,6 +68,9 @@ interface NoteProps {
   showBoardName?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  autoFocusNewItem?: boolean;
+  onAutoFocusComplete?: () => void;
+  textonStart?: string;
 }
 
 export function Note({
@@ -83,12 +86,36 @@ export function Note({
   className,
   syncDB = true,
   style,
+  autoFocusNewItem = false,
+  onAutoFocusComplete,
+  textonStart
 }: NoteProps) {
   const [editingItem, setEditingItem] = useState<string | null>(null);
   const [editingItemContent, setEditingItemContent] = useState("");
   const [newItemContent, setNewItemContent] = useState("");
+  const newItemRef = useRef<HTMLTextAreaElement>(null);
 
   const canEdit = !readonly && (currentUser?.id === note.user.id || currentUser?.isAdmin);
+
+  useEffect(() => {
+    if( textonStart && newItemRef.current ) {
+      newItemRef.current.value = textonStart;
+      setNewItemContent(textonStart);
+    }
+  },[textonStart]);
+
+  // Auto-focus new item when autoFocusNewItem prop is true
+  useEffect(() => {
+    if (autoFocusNewItem && canEdit && newItemRef.current) {
+      // Small delay to ensure DOM is ready
+      const timeoutId = setTimeout(() => {
+        newItemRef.current?.focus();
+        onAutoFocusComplete?.();
+      }, 100);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [autoFocusNewItem, canEdit, onAutoFocusComplete]);
+  
 
   const handleToggleChecklistItem = async (itemId: string) => {
     try {
@@ -508,6 +535,7 @@ export function Note({
 
             {/* Always-available New Item Input */}
             {canEdit && (
+              <>
               <ChecklistItemComponent
                 item={{
                   id: "new-item",
@@ -532,7 +560,35 @@ export function Note({
                 readonly={false}
                 showDeleteButton={false}
                 className="gap-3"
+                textareaRef={newItemRef}
               />
+
+              {newItemContent.trim().length > 0 && (
+                  <ChecklistItemComponent
+                    item={{
+                      id: "new-item-additional",
+                      content: "",
+                      checked: false,
+                      order: 1,
+                    }}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                    isEditing={true}
+                    editContent=""
+                    onEditContentChange={() => {}}
+                    onStopEdit={() => {}}
+                    isNewItem={true}
+                    onCreateItem={(content) => {
+                      if (content.trim()) {
+                        handleAddChecklistItem(content.trim());
+                      }
+                    }}
+                    readonly={false}
+                    showDeleteButton={false}
+                    className="gap-3"
+                  />
+                )}
+              </>
             )}
           </DraggableRoot>
         </div>
